@@ -12,26 +12,43 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
 
+
+
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-
-float f(float x){
-    float y;
-    y = cos(x);
-    return y;
-}
+#include "library.h"
+#include <mpi.h>
 
 int main(int nargs, char **argv){
-    float a =0.0;
-    float b =0.0;
-    float dx = 0.1;
-    float x = 0.0;
-    int n=0;
+  int miproc;
+  int numproc;
+  
+  float a =0.0;
+  float b =0.0;
+  float dx = 0.1;
+  float x = 0.0;
+  int n=0;
+  
+  MPI_Init (&nargs, &argv); /* Inicializar MPI*/
+  MPI_Comm_rank(MPI_COMM_WORLD,&miproc); /*Determinar el rango del proceso invocado*/
+  MPI_Comm_size(MPI_COMM_WORLD,&numproc); /*Determinar el numero de procesos*/
+  MPI_Barrier (MPI_COMM_WORLD);
+
+  if (miproc==0){
+    printf("I'am 0 process. \n")
+
+  }
+
+
+
+
+
+  
+
     /*for (int i=0;i<nargs;i++){
         printf("%s\n", argv[i]);
     }*/
@@ -42,15 +59,20 @@ int main(int nargs, char **argv){
     sscanf(argv[1],"%f",&a);
     sscanf(argv[2],"%f",&b);
     sscanf(argv[3],"%f",&dx);
-    n = (b-a)/dx + 1;
+    dN = (b-a)/numproc;
+    a0 = a+miproc*dN;
+    b0 = a+(miproc+1)*dN;
+      
+    n = (b0-a0)/dx + 1;
     printf("n=%i\n",n);
-    x=a;
+    x=a0;
     for (int i=1;i<=n;i++){
         printf("%f\t%f\n",x,f(x));
         //x = x+dx;
         // nunca sumar 0.1
-        x = a+ i*dx;
+        x = a0+ i*dx;
     }
+    MPI_Finalize();
 
     return 0;
 }
