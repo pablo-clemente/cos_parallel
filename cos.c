@@ -22,16 +22,25 @@
 #include <stdlib.h>
 #include "library.h"
 #include <mpi.h>
+#include "Timming.h"
 
 int main(int nargs, char **argv){
   int miproc;
   int numproc;
   
-  float a =0.0;
-  float b =0.0;
+  float a = 0.0;
+  float b = 0.0;
   float dx = 0.1;
   float x = 0.0;
   int n=0;
+  float dN =0;
+  float a0;
+  float b0;
+  float y;
+
+  double utime0, stime0, wtime0,
+         utime1, stime1, wtime1,
+         utime2, stime2, wtime2;
   
   MPI_Init (&nargs, &argv); /* Inicializar MPI*/
   MPI_Comm_rank(MPI_COMM_WORLD,&miproc); /*Determinar el rango del proceso invocado*/
@@ -39,16 +48,10 @@ int main(int nargs, char **argv){
   MPI_Barrier (MPI_COMM_WORLD);
 
   if (miproc==0){
-    printf("I'am 0 process. \n")
+    printf("I'am 0 process.\n");
+    uswtime(&utime0, &stime0, &wtime0); //toma el tiempo
 
   }
-
-
-
-
-
-  
-
     /*for (int i=0;i<nargs;i++){
         printf("%s\n", argv[i]);
     }*/
@@ -67,12 +70,26 @@ int main(int nargs, char **argv){
     printf("n=%i\n",n);
     x=a0;
     for (int i=1;i<=n;i++){
-        printf("%f\t%f\n",x,f(x));
-        //x = x+dx;
-        // nunca sumar 0.1
-        x = a0+ i*dx;
+      y= f(x);
+      //printf("%f\t%f\n",x,f(x));
+      //x = x+dx;
+      // nunca sumar 0.1
+      x = a0+ i*dx;
     }
-    MPI_Finalize();
 
-    return 0;
+    MPI_Barrier (MPI_COMM_WORLD);
+    if (miproc==0){
+    //printf("I'am 0 process.\n")
+    uswtime(&utime1, &stime1, &wtime1); //toma el tiempo
+    printf("\nBenchmarks (sec):\n");
+    printf("real %.3f\n", wtime1 - wtime0);
+    printf("user %.3f\n", utime1 - utime0);
+    printf("sys %.3f\n", stime1 - stime0);
+    printf("\n");
+    printf("CPU/Wall %.3f %% \n", 100.0 * (utime1 - utime0 * stime1 - stime0)/(wtime1 - wtime0));
+    printf("\n");
+
+  }
+  MPI_Finalize();
+  return 0;
 }
